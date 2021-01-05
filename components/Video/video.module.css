@@ -1,0 +1,6 @@
+.videoPlayerGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 10px auto 10px;
+  align-items: center;
+}
