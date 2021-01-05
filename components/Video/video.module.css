@@ -1,6 +1,17 @@
 .videoPlayerGrid {
   display: grid;
-  gap: 1rem;
-  grid-template-columns: 10px auto 10px;
-  align-items: center;
+  grid-template-rows: min-content 1fr;
+  position: sticky;
+  bottom: 0;
+  width: auto;
 }
+.videoPlayerRow {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: min-content auto min-content;
+}
+/* .videoPlayerRow > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} */

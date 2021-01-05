@@ -14,11 +14,11 @@ export default function Home() {
         <title>Sync Video</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Row className="fullscreen">
-        <Col md={8}>
+      <Row className="fullscreen m-0">
+        <Col md={8} className="p-0">
           <Video />
         </Col>
-        <Col md={4}>
+        <Col md={4} className="p-0">
           <Chat />
         </Col>
       </Row>

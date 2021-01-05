@@ -4,7 +4,8 @@
       "video": {
         "src": { ".validate": true },
         "duration": { ".validate": true },
-        "timeMutatio": { ".validate": true },
+        "timeStamp": { ".validate": true },
+        "isPlaying": { ".validate": true },
         "$other": { ".validate": false },
         ".read": true,
         ".write": false
