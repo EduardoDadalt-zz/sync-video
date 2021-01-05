@@ -1,7 +1,9 @@
 .videoPlayerGrid {
   display: grid;
   grid-template-rows: min-content 1fr;
-  position: sticky;
+  position: absolute;
+  right: 0;
+  left: 0;
   bottom: 0;
   width: auto;
 }

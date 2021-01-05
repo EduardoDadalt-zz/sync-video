@@ -56,18 +56,16 @@ const Video = () => {
       let videoDOM = videoPlayer.current as HTMLVideoElement;
       if (videoDOM.requestFullscreen) {
         videoDOM.requestFullscreen();
-      } else if (videoDOM.webkitRequestFullscreen) {
-        videoDOM.webkitRequestFullscreen();
-      } else if (videoDOM.msRequestFullscreen) {
-        videoDOM.msRequestFullscreen();
       }
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen();
     }
     return () => {
       if (document.fullscreenElement) document.exitFullscreen();
     };
   }, [fullscreen]);
   return (
-    <div ref={videoPlayer} className="bg-dark w-100 h-100">
+    <div ref={videoPlayer} className="bg-dark w-100 h-100 position-relative">
       <video
         src={src}
         className="w-100 h-100"
@@ -75,7 +73,7 @@ const Video = () => {
         onLoadedMetadata={TimeUpdate}
         onTimeUpdate={TimeUpdate}
       />
-      <div className={styles.videoPlayerGrid + " mx-2"}>
+      <div className={styles.videoPlayerGrid + " px-2"}>
         <div>
           <Form.Control
             type="range"
