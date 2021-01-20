@@ -6,14 +6,27 @@
   left: 0;
   bottom: 0;
   width: auto;
+  background: linear-gradient(to bottom, transparent, black);
 }
 .videoPlayerRow {
   display: grid;
   gap: 1rem;
   grid-template-columns: min-content auto min-content;
 }
-/* .videoPlayerRow > div {
+.videoPlayerRow > div {
   display: flex;
   justify-content: center;
   align-items: center;
-} */
+}
+
+.videoBackground {
+  background-color: black;
+}
+.video {
+  min-width: 100%;
+  min-height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}

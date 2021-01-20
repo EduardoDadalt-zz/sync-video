@@ -1,6 +1,9 @@
 import Image from "next/image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Form } from "react-bootstrap";
+import FullscreenButton from "../FullscreenButton";
+import PlayButton from "../PlayButton";
+import Slider from "../SliderVideo";
 import styles from "./video.module.css";
 const Video = () => {
   const video = useRef(null);
@@ -11,30 +14,6 @@ const Video = () => {
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
 
-  const playImage = useMemo(
-    () => (
-      <div>
-        <Image
-          src={"/icons/" + (!play ? "play" : "pause") + ".svg"}
-          height={24}
-          width={24}
-          layout="fixed"
-        />
-      </div>
-    ),
-    [play]
-  );
-  const fullscreenImage = useMemo(
-    () => (
-      <Image
-        src={"/icons/" + (!fullscreen ? "maximize" : "minimize") + ".svg"}
-        height={24}
-        width={24}
-        layout="fixed"
-      />
-    ),
-    [fullscreen]
-  );
   const TimeUpdate = (e) => {
     setVideoCurrentTime(e.currentTarget.currentTime);
     if (e.currentTarget.duration !== videoDuration) {
@@ -64,37 +43,38 @@ const Video = () => {
       if (document.fullscreenElement) document.exitFullscreen();
     };
   }, [fullscreen]);
+
   return (
-    <div ref={videoPlayer} className="bg-dark w-100 h-100 position-relative">
-      <video
-        src={src}
-        className="w-100 h-100"
-        ref={video}
-        onLoadedMetadata={TimeUpdate}
-        onTimeUpdate={TimeUpdate}
-      />
-      <div className={styles.videoPlayerGrid + " px-2"}>
-        <div>
-          <Form.Control
-            type="range"
-            min={0}
-            value={videoCurrentTime}
-            max={videoDuration}
-            onChange={(e) => {
-              video.current.currentTime = e.target.value;
-            }}
-            step={0.001}
-            custom
-          ></Form.Control>
-        </div>
+    <div ref={videoPlayer} className="h-100 position-relative">
+      <div
+        className={
+          "h-100 w-100 d-flex align-items-center justify-content-center " +
+          styles.videoBackground
+        }
+      >
+        <video
+          src={src}
+          className={styles.video}
+          ref={video}
+          onLoadedMetadata={TimeUpdate}
+          onTimeUpdate={TimeUpdate}
+        />
+      </div>
+      <div className={styles.videoPlayerGrid + " p-2"}>
+        <Slider
+          videoCurrentTime={videoCurrentTime}
+          videoDuration={videoDuration}
+          onChange={(e) => {
+            video.current.currentTime = e.target.value;
+          }}
+        />
         <div className={styles.videoPlayerRow + " text-white"}>
-          <div
+          <PlayButton
+            play={play}
             onClick={() => {
               setPlay(!play);
             }}
-          >
-            {playImage}
-          </div>
+          />
           <div>
             {(videoCurrentTime / 60 < 10 ? "0" : "") +
               Math.floor(videoCurrentTime / 60) +
@@ -108,13 +88,12 @@ const Video = () => {
               (videoDuration % 60 < 10 ? "0" : "") +
               Math.floor(videoDuration % 60)}
           </div>
-          <div
+          <FullscreenButton
+            fullscreen={fullscreen}
             onClick={() => {
               setFullscreen(!fullscreen);
             }}
-          >
-            {fullscreenImage}
-          </div>
+          />
         </div>
       </div>
     </div>
