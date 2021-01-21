@@ -1,5 +1,7 @@
 import firebase from "firebase/app";
 import "firebase/database";
+import "firebase/firestore";
+import "firebase/auth";
 const firebaseConfig = {
   apiKey: "AIzaSyA6wK2NVWPtGTNtpI33qiKYNl4wXIJwWjg",
   authDomain: "sync-video-2af31.firebaseapp.com",
@@ -16,4 +18,6 @@ const fire =
     ? firebase.initializeApp(firebaseConfig)
     : firebase.app();
 
+export const firestore = fire.firestore();
+export const auth = fire.auth();
 export default fire;

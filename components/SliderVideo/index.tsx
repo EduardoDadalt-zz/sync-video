@@ -9,10 +9,9 @@ const Slider = ({ videoDuration, videoCurrentTime, ...opts }) => {
       step={0.001}
       value={videoCurrentTime}
       max={videoDuration}
-      custom
       {...opts}
     />
   );
 };
 
-export default memo(Slider);
+export default Slider;

@@ -23,4 +23,5 @@ const fireAdmin =
       })
     : admin.app();
 
+export const adminFirestore = fireAdmin.firestore();
 export default fireAdmin;

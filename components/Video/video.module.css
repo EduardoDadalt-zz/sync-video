@@ -1,3 +1,11 @@
+@keyframes disappear {
+  from {
+    bottom: 0;
+  }
+  to {
+    bottom: 100px;
+  }
+}
 .videoPlayerGrid {
   display: grid;
   grid-template-rows: min-content 1fr;
@@ -7,13 +15,16 @@
   bottom: 0;
   width: auto;
   background: linear-gradient(to bottom, transparent, black);
+  transition: opacity 0.2s ease-in;
 }
+
 .videoPlayerRow {
   display: grid;
   gap: 1rem;
   grid-template-columns: min-content auto min-content;
 }
-.videoPlayerRow > div {
+.videoPlayerRow > div,
+.videoPlayerRow > div > div {
   display: flex;
   justify-content: center;
   align-items: center;
