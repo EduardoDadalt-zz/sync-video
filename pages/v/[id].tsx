@@ -12,12 +12,12 @@ export default function Home(video) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Row className="m-0 fullscreen">
-        <Col sm={8} className="p-0 h-100">
+        <Col sm={12} className="p-0 h-100">
           <Video {...video} />
         </Col>
-        <Col sm={4} className="p-0">
+        {/* <Col sm={4} className="p-0">
           <Chat />
-        </Col>
+        </Col> */}
       </Row>
     </>
   );
