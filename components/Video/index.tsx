@@ -150,11 +150,11 @@ const Video = (props) => {
         <Slider
           videoCurrentTime={videoCurrentTime}
           videoDuration={videoDuration}
-          onChange={(e) => {
+          onChange={async (e) => {
             video.current.currentTime = e.target.value;
             doc.update({
               currentTime: Number(e.target.value),
-              date: Date.now(),
+              date: await dateNow(),
             });
           }}
         />
