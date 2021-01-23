@@ -10,9 +10,9 @@ const getSrc = (page: Page, url) => {
         const type = req.resourceType();
 
         const acepptTypes = ["font", "image", "stylesheet"];
-
-        if (!acepptTypes.includes(type)) req.continue();
-        else req.failure();
+        if (type === "media") resolve(req.url());
+        if (!acepptTypes.includes(type)) return req.continue();
+        else return req.abort();
       });
       await page.goto(url);
       setTimeout(reject, 4000);
