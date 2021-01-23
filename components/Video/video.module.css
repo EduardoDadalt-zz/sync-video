@@ -16,6 +16,7 @@
   width: auto;
   background: linear-gradient(to bottom, transparent, black);
   transition: opacity 0.2s ease-in;
+  user-select: none;
 }
 
 .videoPlayerRow {

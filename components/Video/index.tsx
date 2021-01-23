@@ -7,6 +7,7 @@ import PlayButton from "../PlayButton";
 import Slider from "../SliderVideo";
 import Timer from "../Timer";
 import styles from "./video.module.css";
+
 const Video = () => {
   const video = useRef(null);
   const videoPlayer = useRef(null);
@@ -18,7 +19,7 @@ const Video = () => {
   ] = useState<firebase.firestore.DocumentReference<firebase.firestore.DocumentData> | null>(
     null
   );
-  const [src, setSrc] = useState("/video.mp4");
+  const [src, setSrc] = useState("");
   const [fullscreen, setFullscreen] = useState(false);
   const [play, setPlay] = useState(false);
   const [playLoading, setPlayLoading] = useState(false);
@@ -30,60 +31,75 @@ const Video = () => {
 
     if (!playLoading) {
       if (!play) {
-        //Fazer Tocar
-        doc.set({ currentTime: videoCurrentTime, play: !play });
-        setPlayLoading(false);
+        doc
+          .set({
+            currentTime: videoCurrentTime,
+            play: !play,
+            date: Date.now(),
+            src,
+          })
+          .finally(() => setPlayLoading(false));
       } else {
-        //Parar
-        doc.set({ currentTime: videoCurrentTime, play: !play });
-        setPlayLoading(false);
+        doc
+          .set({
+            currentTime: videoCurrentTime,
+            play: !play,
+            date: Date.now(),
+            src,
+          })
+          .finally(() => setPlayLoading(false));
       }
     }
   };
   const TimeUpdate = (e) => {
     setVideoCurrentTime(e.currentTarget.currentTime);
-    if (e.currentTarget.duration !== videoDuration) {
+    if (
+      e.currentTarget.duration !== videoDuration &&
+      !Number.isNaN(e.currentTarget.duration)
+    )
       setVideoDuration(e.currentTarget.duration);
-    }
   };
+
   useEffect(() => {
+    //Firestore
     let id = window.location.pathname;
     id = id.replace("/v/", "");
     let doc = firestore.collection("video").doc(id);
     setDoc(doc);
     var unsub = doc.onSnapshot((snapshot) => {
       if (snapshot.exists) {
-        const { src, play, currentTime } = snapshot.data();
-        if (src) setSrc(src);
-        if (play) setPlay(play);
-        if (typeof currentTime === "number")
-          (video.current as HTMLVideoElement).currentTime = currentTime;
+        const { src, play, currentTime, date } = snapshot.data();
+        if (!!src) setSrc(src);
+        if (typeof play === "boolean") setPlay(play);
+        if (typeof currentTime === "number" && date)
+          (video.current as HTMLVideoElement).currentTime =
+            currentTime + (Date.now() - date) / 1000;
       }
     });
-    return unsub;
+    //Animation opacity
+    let divVideoPlayer = videoPlayer.current as HTMLDivElement;
+    let handleTimeout;
+    let controls = videoControls.current as HTMLDivElement;
+    let closeControl = () => {
+      controls.style.opacity = "0";
+    };
+    let listiner = () => {
+      controls.style.opacity = "1";
+      clearTimeout(handleTimeout);
+      handleTimeout = setTimeout(closeControl, 2000);
+    };
+    divVideoPlayer.addEventListener("mouseout", closeControl);
+    divVideoPlayer.addEventListener("mousemove", listiner);
+    return () => {
+      unsub();
+      divVideoPlayer.removeEventListener("mouseout", closeControl);
+      divVideoPlayer.removeEventListener("mousemove", listiner);
+      clearTimeout(handleTimeout);
+    };
   }, []);
   useEffect(() => {
-    if (videoPlayer && videoControls) {
-      let divVideoPlayer = videoPlayer.current as HTMLDivElement;
-      let handleTimeout;
-      let controls = videoControls.current as HTMLDivElement;
-      let closeControl = () => {
-        controls.style.opacity = "0";
-      };
-      let listiner = () => {
-        controls.style.opacity = "1";
-        clearTimeout(handleTimeout);
-        handleTimeout = setTimeout(closeControl, 2000);
-      };
-      divVideoPlayer.addEventListener("mouseout", closeControl);
-      divVideoPlayer.addEventListener("mousemove", listiner);
-      return () => {
-        divVideoPlayer.removeEventListener("mouseout", closeControl);
-        divVideoPlayer.removeEventListener("mousemove", listiner);
-        clearTimeout(handleTimeout);
-      };
-    }
-  }, [videoPlayer, videoControls]);
+    (video.current as HTMLVideoElement).pause();
+  }, [src]);
   useEffect(() => {
     video.current.controls = false;
   }, [video?.current?.controls]);
@@ -117,6 +133,8 @@ const Video = () => {
         }
       >
         <video
+          autoPlay={true}
+          preload="auto"
           src={src}
           className={styles.video}
           ref={video}
@@ -131,6 +149,10 @@ const Video = () => {
           videoDuration={videoDuration}
           onChange={(e) => {
             video.current.currentTime = e.target.value;
+            doc.update({
+              currentTime: Number(e.target.value),
+              date: Date.now(),
+            });
           }}
         />
         <div className={styles.videoPlayerRow + " text-white"}>

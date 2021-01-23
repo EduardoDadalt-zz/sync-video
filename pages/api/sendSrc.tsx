@@ -2,30 +2,33 @@ import { NextApiRequest, NextApiResponse } from "next";
 import puppeteer, { Page } from "puppeteer";
 import { adminFirestore } from "../../config/adminFB";
 
-const otimizationPage = async (page: Page) => {
-  await page.setRequestInterception(true);
-  page.on("request", (req) => {
-    const type = req.resourceType();
-    const acepptTypes = ["document", "fetch", "script", "xhr", "media"];
-    if (acepptTypes.includes(type)) req.continue();
-    else req.abort();
+const getSrc = (page: Page, url) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await page.setRequestInterception(true);
+      page.on("request", (req) => {
+        const type = req.resourceType();
+        const acepptTypes = ["document", "fetch", "script", "xhr", "media"];
+        if (type === "media") resolve(req.url());
+        if (acepptTypes.includes(type)) req.continue();
+        else req.abort();
+      });
+      await page.goto(url);
+      setTimeout(reject, 4000);
+    } catch (error) {
+      reject();
+    }
   });
 };
+
 const getVideoOfLink = async (url: string) => {
-  const browser = await puppeteer.launch({
-    executablePath:
-      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  });
+  const browser = await puppeteer.launch();
   try {
     const page = await browser.newPage();
-    await otimizationPage(page);
-    await page.goto(url);
-    await page.waitForSelector("video", { timeout: 3000 });
-    const src = await page.$eval("video", (el: HTMLVideoElement) => el.src);
+    const src = await getSrc(page, url);
     browser.close().then((e) => console.log("Browser Close"));
     return src;
   } catch (error) {
-    console.error(error);
     browser.close().then((e) => console.log("Browser Close"));
     return "";
   }
@@ -33,6 +36,7 @@ const getVideoOfLink = async (url: string) => {
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const { url, path } = req.body;
+
     const src = await getVideoOfLink(url);
     if (!!src && !!path) {
       adminFirestore.collection("video").doc(path).set({
