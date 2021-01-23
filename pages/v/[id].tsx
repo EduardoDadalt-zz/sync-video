@@ -2,7 +2,9 @@ import Head from "next/head";
 import { Col, Row } from "react-bootstrap";
 import Chat from "../../components/Chat";
 import Video from "../../components/Video";
-export default function Home() {
+import { GetServerSideProps } from "next";
+import { firestore } from "../../config/fire";
+export default function Home(video) {
   return (
     <>
       <Head>
@@ -11,7 +13,7 @@ export default function Home() {
       </Head>
       <Row className="m-0 fullscreen">
         <Col sm={8} className="p-0 h-100">
-          <Video />
+          <Video {...video} />
         </Col>
         <Col sm={4} className="p-0">
           <Chat />
@@ -20,3 +22,15 @@ export default function Home() {
     </>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const snapshot = await firestore
+    .collection("video")
+    .doc(String(ctx.query.id))
+    .get();
+  if (snapshot.exists) {
+    const { src } = snapshot.data();
+    return { props: { src } };
+  }
+  return { props: {} };
+};

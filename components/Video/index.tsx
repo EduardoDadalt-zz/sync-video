@@ -8,7 +8,7 @@ import Slider from "../SliderVideo";
 import Timer from "../Timer";
 import styles from "./video.module.css";
 
-const Video = () => {
+const Video = (props) => {
   const video = useRef(null);
   const videoPlayer = useRef(null);
   const videoControls = useRef(null);
@@ -19,7 +19,7 @@ const Video = () => {
   ] = useState<firebase.firestore.DocumentReference<firebase.firestore.DocumentData> | null>(
     null
   );
-  const [src, setSrc] = useState("");
+  const [src, setSrc] = useState(props.src ?? "");
   const [fullscreen, setFullscreen] = useState(false);
   const [play, setPlay] = useState(false);
   const [playLoading, setPlayLoading] = useState(false);
@@ -82,9 +82,11 @@ const Video = () => {
     let controls = videoControls.current as HTMLDivElement;
     let closeControl = () => {
       controls.style.opacity = "0";
+      divVideoPlayer.style.cursor = "none";
     };
     let listiner = () => {
       controls.style.opacity = "1";
+      divVideoPlayer.style.cursor = "initial";
       clearTimeout(handleTimeout);
       handleTimeout = setTimeout(closeControl, 2000);
     };
