@@ -1,61 +1,63 @@
+import { rejects } from "assert";
+import chromium from "chrome-aws-lambda";
 import { NextApiRequest, NextApiResponse } from "next";
-import puppeteer, { Page } from "puppeteer";
+import { Browser, Page } from "puppeteer-core";
 import { firestore } from "../../config/fire";
+let browser: Browser | null = null;
 
-const getSrc = (page: Page, url) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      await page.setRequestInterception(true);
-      page.on("request", (req) => {
-        const type = req.resourceType();
+const timer = 5; //in sec
+const acceptTypes = ["document", "fetch", "script", "xhr", "media"];
 
-        const acepptTypes = ["font", "image", "stylesheet"];
-        if (type === "media") resolve(req.url());
-        if (!acepptTypes.includes(type)) return req.continue();
-        else return req.abort();
-      });
-      await page.goto(url);
-      setTimeout(reject, 4000);
-    } catch (error) {
-      reject();
-    }
-  });
-};
-
-const getVideoOfLink = async (url: string) => {
-  const browser = await puppeteer.launch();
-  try {
-    const page = await browser.newPage();
-    const src = await getSrc(page, url);
-
-    browser.close().then((e) => console.log("Browser Close"));
-    return src;
-  } catch (error) {
-    browser.close().then((e) => console.log("Browser Close"));
-    return "";
-  }
-};
 export default async (req: NextApiRequest, res: NextApiResponse) => {
+  let statusCode = 400;
   try {
     const { url, path } = req.body;
-
-    const src = await getVideoOfLink(url);
-    if (!!src && !!path) {
-      firestore.collection("video").doc(path).set({
-        src,
-        play: false,
-        currentTime: 0,
-        date: Date.now(),
-      });
-      res.statusCode = 200;
-      res.send("OK");
-    } else {
-      res.statusCode = 400;
-      res.end();
+    if (url && path) {
+      if (!browser) {
+        browser = await chromium.puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath:
+            (await chromium.executablePath) ??
+            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          headless: chromium.headless,
+          ignoreHTTPSErrors: true,
+        });
+      }
+      let page = await browser.newPage();
+      console.log("Pagina Abriu");
+      await page.setRequestInterception(true);
+      new Promise((resolve) => {
+        page.on("request", (req) => {
+          const type = req.resourceType();
+          if (type === "media") resolve(req.url());
+          if (acceptTypes.includes(type)) req.continue();
+          else req.abort();
+        });
+      })
+        .then((src) => {
+          console.log(src);
+          if (!!src)
+            firestore.collection("video").doc(path).set({
+              currentTime: 0,
+              date: Date.now(),
+              src,
+              play: false,
+            });
+        })
+        .finally(() => page.close());
+      await page.goto(url);
     }
+    statusCode = 200;
   } catch (error) {
+    statusCode = 500;
     console.error(error);
-    res.statusCode = 500;
+  } finally {
+    res.statusCode = statusCode;
     res.end();
   }
 };
+
+process.on("beforeExit", () =>
+  browser.close().then(() => console.log("Fechou"))
+);

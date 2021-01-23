@@ -31,5 +31,5 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     const { src } = snapshot.data();
     return { props: { src } };
   }
-  return { props: {} };
+  return { props: { src: "/video.mp4" } };
 };

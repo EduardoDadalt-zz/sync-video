@@ -36,7 +36,7 @@ const Video = (props) => {
           .set({
             currentTime: videoCurrentTime,
             play: !play,
-            date: fetchDateNow(),
+            date: await fetchDateNow(),
             src,
           })
           .finally(() => setPlayLoading(false));
@@ -45,7 +45,7 @@ const Video = (props) => {
           .set({
             currentTime: videoCurrentTime,
             play: !play,
-            date: fetchDateNow(),
+            date: await fetchDateNow(),
             src,
           })
           .finally(() => setPlayLoading(false));
