@@ -1,7 +1,7 @@
 import firebase from "firebase";
 import React, { useEffect, useRef, useState } from "react";
 import { firestore } from "../../config/fire";
-import dateNow from "../../utils/DateNow";
+import fetchDateNow from "../../utils/fetchDateNow";
 import FullscreenButton from "../FullscreenButton";
 import ImportVideoButton from "../ImportVideoButton";
 import PlayButton from "../PlayButton";
@@ -36,7 +36,7 @@ const Video = (props) => {
           .set({
             currentTime: videoCurrentTime,
             play: !play,
-            date: dateNow(),
+            date: fetchDateNow(),
             src,
           })
           .finally(() => setPlayLoading(false));
@@ -45,7 +45,7 @@ const Video = (props) => {
           .set({
             currentTime: videoCurrentTime,
             play: !play,
-            date: dateNow(),
+            date: fetchDateNow(),
             src,
           })
           .finally(() => setPlayLoading(false));
@@ -74,7 +74,7 @@ const Video = (props) => {
         if (typeof play === "boolean") setPlay(play);
         if (typeof currentTime === "number" && date)
           (video.current as HTMLVideoElement).currentTime =
-            currentTime + ((await dateNow()) - date) / 1000;
+            currentTime + ((await fetchDateNow()) - date) / 1000;
       }
     });
     //Animation opacity
@@ -154,7 +154,7 @@ const Video = (props) => {
             video.current.currentTime = e.target.value;
             doc.update({
               currentTime: Number(e.target.value),
-              date: await dateNow(),
+              date: await fetchDateNow(),
             });
           }}
         />

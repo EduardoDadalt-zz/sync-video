@@ -1,8 +1,7 @@
+import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { Col, Row } from "react-bootstrap";
-import Chat from "../../components/Chat";
 import Video from "../../components/Video";
-import { GetServerSideProps } from "next";
 import { firestore } from "../../config/fire";
 export default function Home(video) {
   return (
