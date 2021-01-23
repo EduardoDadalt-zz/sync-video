@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import puppeteer, { Page } from "puppeteer";
-import { adminFirestore } from "../../config/adminFB";
+import { firestore } from "../../config/fire";
 
 const getSrc = (page: Page, url) => {
   return new Promise(async (resolve, reject) => {
@@ -8,10 +8,11 @@ const getSrc = (page: Page, url) => {
       await page.setRequestInterception(true);
       page.on("request", (req) => {
         const type = req.resourceType();
-        const acepptTypes = ["document", "fetch", "script", "xhr", "media"];
-        if (type === "media") resolve(req.url());
-        if (acepptTypes.includes(type)) req.continue();
-        else req.abort();
+
+        const acepptTypes = ["font", "image", "stylesheet"];
+
+        if (!acepptTypes.includes(type)) req.continue();
+        else req.failure();
       });
       await page.goto(url);
       setTimeout(reject, 4000);
@@ -26,6 +27,7 @@ const getVideoOfLink = async (url: string) => {
   try {
     const page = await browser.newPage();
     const src = await getSrc(page, url);
+
     browser.close().then((e) => console.log("Browser Close"));
     return src;
   } catch (error) {
@@ -39,7 +41,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const src = await getVideoOfLink(url);
     if (!!src && !!path) {
-      adminFirestore.collection("video").doc(path).set({
+      firestore.collection("video").doc(path).set({
         src,
         play: false,
         currentTime: 0,

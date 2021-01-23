@@ -1,6 +1,7 @@
 import firebase from "firebase";
 import React, { useEffect, useRef, useState } from "react";
 import { firestore } from "../../config/fire";
+import dateNow from "../../utils/DateNow";
 import FullscreenButton from "../FullscreenButton";
 import ImportVideoButton from "../ImportVideoButton";
 import PlayButton from "../PlayButton";
@@ -26,16 +27,16 @@ const Video = (props) => {
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
 
-  const handlePlay = () => {
-    setPlayLoading(true);
-
+  const handlePlay = async () => {
     if (!playLoading) {
+      setPlayLoading(true);
+
       if (!play) {
         doc
           .set({
             currentTime: videoCurrentTime,
             play: !play,
-            date: Date.now(),
+            date: dateNow(),
             src,
           })
           .finally(() => setPlayLoading(false));
@@ -44,7 +45,7 @@ const Video = (props) => {
           .set({
             currentTime: videoCurrentTime,
             play: !play,
-            date: Date.now(),
+            date: dateNow(),
             src,
           })
           .finally(() => setPlayLoading(false));
@@ -66,14 +67,14 @@ const Video = (props) => {
     id = id.replace("/v/", "");
     let doc = firestore.collection("video").doc(id);
     setDoc(doc);
-    var unsub = doc.onSnapshot((snapshot) => {
+    var unsub = doc.onSnapshot(async (snapshot) => {
       if (snapshot.exists) {
         const { src, play, currentTime, date } = snapshot.data();
         if (!!src) setSrc(src);
         if (typeof play === "boolean") setPlay(play);
         if (typeof currentTime === "number" && date)
           (video.current as HTMLVideoElement).currentTime =
-            currentTime + (Date.now() - date) / 1000;
+            currentTime + ((await dateNow()) - date) / 1000;
       }
     });
     //Animation opacity
@@ -99,9 +100,9 @@ const Video = (props) => {
       clearTimeout(handleTimeout);
     };
   }, []);
-  useEffect(() => {
-    (video.current as HTMLVideoElement).pause();
-  }, [src]);
+  // useEffect(() => {
+  //   (video.current as HTMLVideoElement).pause();
+  // }, [src]);
   useEffect(() => {
     video.current.controls = false;
   }, [video?.current?.controls]);
