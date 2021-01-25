@@ -1,7 +1,6 @@
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { Container } from "react-bootstrap";
-import { setTimeout } from "timers";
 const Page404 = () => {
   const router = useRouter();
   useEffect(() => {
