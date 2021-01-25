@@ -74,7 +74,7 @@ const Video = (props) => {
         if (typeof play === "boolean") setPlay(play);
         if (typeof currentTime === "number" && date)
           (video.current as HTMLVideoElement).currentTime =
-            currentTime + ((await fetchDateNow()) - date) / 1000;
+            currentTime + (!play && ((await fetchDateNow()) - date) / 1000);
       }
     });
     //Animation opacity

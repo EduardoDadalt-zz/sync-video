@@ -32,7 +32,7 @@
 }
 
 .videoBackground {
-  background-color: black;
+  background-color: rgb(26, 26, 26);
 }
 .video {
   min-width: 100%;
