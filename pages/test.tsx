@@ -8,22 +8,23 @@ interface DateDiff {
   fetchDate: number;
 }
 const Test = ({ date }) => {
-  const [diff] = useState(Date.now() - date);
+  //const [diff] = useState(Date.now() - date);
   const [test, setTest] = useState<DateDiff[]>([
     {
-      dateNow: Date.now() - diff,
+      dateNow: Date.now(),
       fetchDate: date,
     },
   ]);
   const handleClick = async () => {
     const fetchDate = await fetchDateNow();
-    const dateNow = Date.now() - diff;
+    const dateNow = Date.now();
+    // - diff;
     setTest((prevState) => [...prevState, { fetchDate, dateNow }]);
   };
 
   return (
     <div className="overflow-scroll">
-      <Container>{diff}</Container>
+      {/* <Container>{diff}</Container> */}
       <Container>
         {test.map((v: DateDiff) => (
           <DateDiffDiv {...v} />
