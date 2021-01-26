@@ -5,7 +5,6 @@ import styles from "./style.module.css";
 const VolumeButton = ({ muted, volume, handleVolumeChange, handleMuted }) => {
   const [src, setSrc] = useState("volume-x.svg");
   const [showSlider, setShowSlider] = useState(false);
-  console.log({ muted, volume });
   useEffect(() => {
     if (muted) setSrc("volume-x.svg");
     else if (volume == 0) setSrc("volume.svg");
