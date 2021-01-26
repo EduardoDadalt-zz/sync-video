@@ -28,8 +28,8 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     .doc(String(ctx.query.id))
     .get();
   if (snapshot.exists) {
-    const { src } = snapshot.data();
-    return { props: { src } };
+    const { src, play } = snapshot.data();
+    return { props: { src, play } };
   }
   return { props: { src: "/video.mp4" } };
 };

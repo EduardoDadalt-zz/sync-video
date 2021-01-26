@@ -7,13 +7,14 @@ import ImportVideoButton from "../ImportVideoButton";
 import PlayButton from "../PlayButton";
 import Slider from "../SliderVideo";
 import Timer from "../Timer";
+import VolumeButton from "../VolumeButton";
 import styles from "./video.module.css";
 
 const Video = (props) => {
+  //TODO Arrumar FullScreen
   const video = useRef(null);
   const videoPlayer = useRef(null);
   const videoControls = useRef(null);
-
   const [
     doc,
     setDoc,
@@ -22,15 +23,17 @@ const Video = (props) => {
   );
   const [src, setSrc] = useState(props.src ?? "");
   const [fullscreen, setFullscreen] = useState(false);
-  const [play, setPlay] = useState(false);
+  const [play, setPlay] = useState(props.play ?? false);
   const [playLoading, setPlayLoading] = useState(false);
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
-
+  const [canPlay, setCanPlay] = useState(false);
+  const [userInteraction, setUserInteraction] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(true);
   const handlePlay = async () => {
     if (!playLoading) {
       setPlayLoading(true);
-
       if (!play) {
         doc
           .set({
@@ -60,8 +63,19 @@ const Video = (props) => {
     )
       setVideoDuration(e.currentTarget.duration);
   };
-
+  const handleVolumeChange = (value) => {
+    setVolume(value);
+  };
+  const handleMuted = () => {
+    setMuted(!muted);
+  };
   useEffect(() => {
+    //Detect user interation
+    document.onmousemove = () => {
+      setUserInteraction(true);
+      document.onmousemove = null;
+    };
+
     //Firestore
     let id = window.location.pathname;
     id = id.replace("/v/", "");
@@ -71,10 +85,13 @@ const Video = (props) => {
       if (snapshot.exists) {
         const { src, play, currentTime, date } = snapshot.data();
         if (!!src) setSrc(src);
-        if (typeof play === "boolean") setPlay(play);
-        if (typeof currentTime === "number" && date)
-          (video.current as HTMLVideoElement).currentTime =
-            currentTime + (!play && ((await fetchDateNow()) - date) / 1000);
+        if (typeof play === "boolean") {
+          setPlay(play);
+          if (typeof currentTime === "number" && date) {
+            (video.current as HTMLVideoElement).currentTime =
+              currentTime + (play ? ((await fetchDateNow()) - date) / 1000 : 0);
+          }
+        }
       }
     });
     //Animation opacity
@@ -91,27 +108,43 @@ const Video = (props) => {
       clearTimeout(handleTimeout);
       handleTimeout = setTimeout(closeControl, 2000);
     };
-    divVideoPlayer.addEventListener("mouseout", closeControl);
-    divVideoPlayer.addEventListener("mousemove", listiner);
+    divVideoPlayer.ontouchstart = listiner;
+    divVideoPlayer.onmousemove = listiner;
+    divVideoPlayer.onmouseout = closeControl;
     return () => {
       unsub();
-      divVideoPlayer.removeEventListener("mouseout", closeControl);
-      divVideoPlayer.removeEventListener("mousemove", listiner);
+      document.onmousemove = null;
+      divVideoPlayer.ontouchstart = null;
+      divVideoPlayer.onmouseout = null;
+      divVideoPlayer.onmousemove = null;
       clearTimeout(handleTimeout);
     };
   }, []);
-  // useEffect(() => {
-  //   (video.current as HTMLVideoElement).pause();
-  // }, [src]);
+  useEffect(() => {
+    (video.current as HTMLVideoElement).volume = volume;
+  }, [volume]);
+  useEffect(() => {
+    (video.current as HTMLVideoElement).muted = muted;
+  }, [muted]);
   useEffect(() => {
     video.current.controls = false;
   }, [video?.current?.controls]);
   useEffect(() => {
-    if (play) {
-      (video.current as HTMLVideoElement)?.play();
-    } else {
-      (video.current as HTMLVideoElement)?.pause();
-    }
+    (async () => {
+      let videoDOM = video.current as HTMLVideoElement;
+
+      if (canPlay) {
+        try {
+          if (play) {
+            videoDOM.muted = true;
+            await videoDOM?.play();
+            if (userInteraction) videoDOM.muted = muted;
+          } else {
+            videoDOM?.pause();
+          }
+        } catch (error) {}
+      }
+    })();
   }, [play]);
   useEffect(() => {
     if (fullscreen && videoPlayer) {
@@ -136,13 +169,16 @@ const Video = (props) => {
         }
       >
         <video
-          autoPlay={true}
           preload="auto"
           src={src}
           className={styles.video}
           ref={video}
+          playsInline
           onLoadedMetadata={TimeUpdate}
           onTimeUpdate={TimeUpdate}
+          autoPlay={play}
+          onCanPlay={() => setCanPlay(true)}
+          muted
         />
       </div>
       <ImportVideoButton />
@@ -162,12 +198,15 @@ const Video = (props) => {
           <div onClick={handlePlay}>
             <PlayButton play={play} loading={playLoading} />
           </div>
-          <div>
-            <Timer
-              videoCurrentTime={Math.floor(videoCurrentTime)}
-              videoDuration={Math.floor(videoDuration)}
-            />
-          </div>
+          <VolumeButton
+            volume={volume}
+            muted={muted}
+            {...{ handleVolumeChange, handleMuted }}
+          />
+          <Timer
+            videoCurrentTime={Math.floor(videoCurrentTime)}
+            videoDuration={Math.floor(videoDuration)}
+          />
           <div onClick={() => setFullscreen(!fullscreen)}>
             <FullscreenButton fullscreen={fullscreen} />
           </div>

@@ -1,0 +1,5 @@
+.sliderAudio {
+  transition: width 0.2s;
+  width: 100px !important;
+  opacity: 1 !important;
+}

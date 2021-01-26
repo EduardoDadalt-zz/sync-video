@@ -2,7 +2,7 @@ import React, { memo } from "react";
 
 const Timer = ({ videoCurrentTime, videoDuration }) => {
   return (
-    <div>
+    <div className="d-flex justify-content-start">
       <span>
         {(videoCurrentTime / 60 < 10 ? "0" : "") +
           Math.floor(videoCurrentTime / 60) +

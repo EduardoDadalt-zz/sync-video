@@ -22,7 +22,7 @@
 .videoPlayerRow {
   display: grid;
   gap: 1rem;
-  grid-template-columns: min-content auto min-content;
+  grid-template-columns: min-content min-content auto min-content;
 }
 .videoPlayerRow > div,
 .videoPlayerRow > div > div {

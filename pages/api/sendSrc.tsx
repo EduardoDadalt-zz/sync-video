@@ -14,6 +14,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const { url, path } = req.body;
     if (url && path) {
       if (!browser) {
+        console.log(await chromium.executablePath);
         browser = await chromium.puppeteer.launch({
           args: chromium.args,
           defaultViewport: chromium.defaultViewport,
@@ -27,28 +28,30 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       let page = await browser.newPage();
       console.log("Pagina Abriu");
       await page.setRequestInterception(true);
-      new Promise((resolve) => {
+      new Promise((resolve, reject) => {
         page.on("request", (req) => {
           const type = req.resourceType();
           if (type === "media") resolve(req.url());
           if (acceptTypes.includes(type)) req.continue();
           else req.abort();
         });
+        setTimeout(reject, timer * 1000);
       })
-        .then((src) => {
-          console.log(src);
+        .then(async (src) => {
+          console.log({ src });
           if (!!src)
-            firestore.collection("video").doc(path).set({
+            await firestore.collection("video").doc(path).set({
               currentTime: 0,
               date: Date.now(),
               src,
               play: false,
             });
+          statusCode = 200;
         })
         .finally(() => page.close());
       await page.goto(url);
     }
-    statusCode = 200;
+    statusCode = 400;
   } catch (error) {
     statusCode = 500;
     console.error(error);
