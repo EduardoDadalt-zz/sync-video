@@ -1,15 +1,12 @@
-import { rejects } from "assert";
 import chromium from "chrome-aws-lambda";
 import { NextApiRequest, NextApiResponse } from "next";
-import { Browser, Page } from "puppeteer-core";
+import { Browser } from "puppeteer-core";
 import { firestore } from "../../config/fire";
+import sendResponse from "../../utils/sendResponse";
+
 let browser: Browser | null = null;
 
-const timer = 5; //in sec
-const acceptTypes = ["document", "fetch", "script", "xhr", "media"];
-
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-  let statusCode = 400;
   try {
     const { url, path } = req.body;
     if (url && path) {
@@ -23,48 +20,29 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
           headless: chromium.headless,
           ignoreHTTPSErrors: true,
         });
-        console.log("Abriu o chromez");
+        console.log("Abriu o chrome");
       }
       let page = await browser.newPage();
       console.log("Pagina Abriu");
-      await page.setRequestInterception(true);
-      new Promise((resolve, reject) => {
-        page.on("request", async (req) => {
-          try {
-            const type = req.resourceType();
-            if (type === "media") resolve(req.url());
-            if (acceptTypes.includes(type)) req.continue();
-            else req.abort();
-          } catch (e) {}
-        });
-        setTimeout(reject, timer * 1000);
-      })
-        .then(async (src) => {
-          console.log("Vídeo encontrado");
-          if (!!src) {
-            await firestore.collection("video").doc(path).set({
-              currentTime: 0,
-              date: Date.now(),
-              src,
-              play: false,
-            });
-            statusCode = 200;
-          } else statusCode = 404;
-        })
-        .catch(() => (statusCode = 404))
-        .finally(() => page.close().then((e) => console.log("Página Fechou")));
       await page.goto(url);
+      await page.waitForSelector("video");
+      const src = await page.$eval("video", (e: HTMLVideoElement) => e.src);
+      if (!src) {
+        console.log("Não achou vídeo");
+        return sendResponse(res, 400);
+      }
+      await firestore.collection("video").doc(path).set({
+        src,
+        currentTime: 0,
+        date: Date.now(),
+        play: false,
+      });
+      console.log("Achou vídeo");
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      return sendResponse(res, 200, "OK");
     }
-    statusCode = 400;
-  } catch (error) {
-    statusCode = 500;
-    // console.error(error);
-  } finally {
-    res.statusCode = statusCode;
-    res.end();
+    return sendResponse(res, 400);
+  } catch (e) {
+    return sendResponse(res, 500);
   }
 };
-
-process.on("beforeExit", () =>
-  browser.close().then(() => console.log("Fechou"))
-);
