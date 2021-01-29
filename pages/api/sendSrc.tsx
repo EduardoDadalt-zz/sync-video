@@ -1,10 +1,20 @@
 import chromium from "chrome-aws-lambda";
 import { NextApiRequest, NextApiResponse } from "next";
-import { Browser } from "puppeteer-core";
+import { Browser, Page } from "puppeteer-core";
 import { firestore } from "../../config/fire";
 import sendResponse from "../../utils/sendResponse";
 
 let browser: Browser | null = null;
+
+const notAcceptedTypes = ["stylesheet", "image", "font"];
+const pageOtimization = async (page: Page) => {
+  page.setRequestInterception(true);
+  page.on("request", (req) => {
+    let type = req.resourceType();
+    if (notAcceptedTypes.includes(type)) req.failure();
+    else req.continue();
+  });
+};
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   try {
@@ -16,13 +26,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
           args: chromium.args,
           defaultViewport: chromium.defaultViewport,
           executablePath:
-            (await chromium.executablePath) ?? "/usr/bin/google-chrome-stable",
-          headless: chromium.headless,
+            (await chromium.executablePath) ??
+            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
           ignoreHTTPSErrors: true,
         });
         console.log("Abriu o chrome");
       }
       let page = await browser.newPage();
+      await pageOtimization(page);
       console.log("Pagina Abriu");
       await page.goto(url);
       await page.waitForSelector("video");
